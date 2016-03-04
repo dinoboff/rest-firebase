@@ -1,5 +1,7 @@
 # REST Firebase
 
+[![Build Status](https://travis-ci.org/dinoboff/rest-firebase.svg?branch=master)](https://travis-ci.org/dinoboff/rest-firebase)
+
 REST client for Firebase. Mainly use for e2e tests when you might need to send
 concurrent requests from different users.
 
