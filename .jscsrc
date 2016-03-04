@@ -1,0 +1,8 @@
+{
+	"preset": "google",
+	"excludeFiles": ["node_modules", "coverage"],
+	"maximumLineLength": 120,
+	"disallowMultipleVarDecl": {
+		allExcept: ['undefined']
+	}
+}
