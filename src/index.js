@@ -122,15 +122,9 @@ class Request {
  *
  *    // you can pass parameters
  *    // (see https://www.firebase.com/docs/rest/api/#section-query-parameters)
- *    ref.get({shallow: true}).then(
- *      resp => {
- *        // Access the value with `resp.body`,
- *        // and the firebase rules debug message (when enabled) with `resp.authDebug`
- *      },
- *      err => {
- *        // Access the firebase rules debug message (when enabled) with `err.authDebug`
- *      }
- *   );
+ *    ref.get({shallow: true}).then(value => {
+ *        // ...
+ *    });
  *
  * @param  {string}   target Firebase ID or URL
  * @return {function}
