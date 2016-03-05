@@ -5,6 +5,7 @@ const expect = require('expect.js');
 const firebase = require('../');
 const url = require('url');
 const fakeServer = require('./fakeserver');
+const sinon = require('sinon');
 
 describe('factory', function() {
 
@@ -54,8 +55,11 @@ describe('factory', function() {
 
     beforeEach(function() {
       const factory = firebase.factory(`http://127.0.0.1:${port}`);
+      const logger = {
+        warn: sinon.mock()
+      };
 
-      ref = factory({paths, auth});
+      ref = factory({paths, auth, logger});
       server = fakeServer.factory({port});
       server.start();
     });
@@ -89,11 +93,11 @@ describe('factory', function() {
         });
 
         return ref.get().then(
-          actual => expect(actual.body).to.eql(expected)
+          actual => expect(actual).to.eql(expected)
         );
       });
 
-      it('should resolve with the firebase debug messages', function() {
+      it('should log the firebase debug messages', function() {
         const debugMsg = 'some message';
 
         server.returns.push((req, resp) => {
@@ -105,7 +109,7 @@ describe('factory', function() {
         });
 
         return ref.get().then(
-          actual => expect(actual.authDebug).to.eql(debugMsg)
+          () => sinon.assert.calledWith(ref.$logger.warn, debugMsg)
         );
       });
 
@@ -201,7 +205,7 @@ describe('factory', function() {
         ref.set(payload);
       });
 
-      it('should resolve with the firebase debug messages', function() {
+      it('should log the firebase debug messages', function() {
         const debugMsg = 'some message';
 
         server.returns.push((req, resp) => {
@@ -213,7 +217,7 @@ describe('factory', function() {
         });
 
         return ref.set({some: 'value'}).then(
-          actual => expect(actual.authDebug).to.eql(debugMsg)
+          () => sinon.assert.calledWith(ref.$logger.warn, debugMsg)
         );
       });
 
@@ -330,7 +334,7 @@ describe('factory', function() {
         ref.update(payload);
       });
 
-      it('should resolve with the firebase debug messages', function() {
+      it('should log the firebase debug messages', function() {
         const debugMsg = 'some message';
 
         server.returns.push((req, resp) => {
@@ -342,7 +346,7 @@ describe('factory', function() {
         });
 
         return ref.update({some: 'value'}).then(
-          actual => expect(actual.authDebug).to.eql(debugMsg)
+          () => sinon.assert.calledWith(ref.$logger.warn, debugMsg)
         );
       });
 
@@ -377,7 +381,7 @@ describe('factory', function() {
         );
       });
 
-      it('should resolve with the firebase debug messages', function() {
+      it('should log the firebase debug messages', function() {
         const debugMsg = 'some message';
 
         server.returns.push((req, resp) => {
@@ -389,7 +393,7 @@ describe('factory', function() {
         });
 
         return ref.remove().then(
-          actual => expect(actual.authDebug).to.eql(debugMsg)
+          () => sinon.assert.calledWith(ref.$logger.warn, debugMsg)
         );
       });
 
@@ -440,7 +444,7 @@ describe('factory', function() {
         ref.push(payload);
       });
 
-      it('should resolve with the firebase debug messages', function() {
+      it('should log the firebase debug messages', function() {
         const debugMsg = 'some message';
 
         server.returns.push((req, resp) => {
@@ -452,7 +456,7 @@ describe('factory', function() {
         });
 
         return ref.push({some: 'value'}).then(
-          actual => expect(actual.authDebug).to.eql(debugMsg)
+          () => sinon.assert.calledWith(ref.$logger.warn, debugMsg)
         );
       });
 

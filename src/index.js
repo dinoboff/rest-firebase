@@ -30,6 +30,7 @@ class Request {
   constructor(opts) {
     this.url = opts.url;
     this.auth = opts.auth;
+    this.$logger = opts.logger || console;
   }
 
   toString() {
@@ -58,15 +59,18 @@ class Request {
           return;
         }
 
+        const debugMessage = resp.headers['x-firebase-auth-debug'];
+
+        if (debugMessage) {
+          this.$logger.warn(debugMessage);
+        }
+
         if (resp.statusCode >= 300) {
           reject(new ResponseError(opts, resp, body));
           return;
         }
 
-        resolve({
-          body: body,
-          authDebug: resp.headers['x-firebase-auth-debug']
-        });
+        resolve(body);
       });
     });
   }
@@ -143,13 +147,12 @@ function restFirebaseFactory(target) {
     throw new Error(ERR_INVALID_ID);
   }
 
-  function restFirebase(opts, deps) {
+  function restFirebase(opts) {
     const relPaths = opts && opts.paths || '';
     const paths = [rootPath].concat(relPaths);
 
     return new Request(
-      Object.assign({}, opts, {url: paths.join('/')}),
-      deps
+      Object.assign({}, opts, {url: paths.join('/')})
     );
   }
 
