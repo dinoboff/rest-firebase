@@ -1,14 +1,14 @@
 {
   "name": "rest-firebase",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "REST client for Firebase",
   "main": "src/index.js",
   "directories": {
     "lib": "src"
   },
   "repository": "github:dinoboff/rest-firebase",
-  "engines" : {
-    "node" : ">=4.0.0"
+  "engines": {
+    "node": ">=4.0.0"
   },
   "scripts": {
     "cover": "istanbul cover ./node_modules/mocha/bin/_mocha tests/index.js --report lcov -- -R spec",
@@ -18,7 +18,11 @@
     "test": "mocha tests/index.js",
     "test-e2e": "mocha e2e/index.js"
   },
-  "keywords": ["REST", "Firebase", "test"],
+  "keywords": [
+    "REST",
+    "Firebase",
+    "test"
+  ],
   "author": "Damien Lebrun",
   "license": "MIT",
   "devDependencies": {
