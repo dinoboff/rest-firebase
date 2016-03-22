@@ -11,13 +11,13 @@ will be logged.
 
 ## Install
 
-```
+```bash
 npm install rest-firebase
 ```
 
 ## Usage
 
-```
+```javascript
 const restFirebase = require('rest-firebase');
 const firebase = restFirebase.factory('some-id');
 const ref = firebase({paths: 'some/path', auth: 'some-oauth-token'});
@@ -28,5 +28,32 @@ const ref = firebase({paths: 'some/path', auth: 'some-oauth-token'});
 // (see https://www.firebase.com/docs/rest/api/#section-query-parameters)
 ref.get({shallow: true}).then(value => {
   // do something with value
-});
+}).then(
+  // Set value of the branch
+  () => ref.set({foo: 1})
+).then(
+  // patch some children of the branch
+  () => ref.update({bar: 2})
+).then(
+  // push new child
+  ()=> ref.push(3)
+).then(
+  // delete branch
+  () => ref.remove()
+);
+```
+
+It can also be used to retrieve or set the DB security rules:
+```javascript
+const restFirebase = require('rest-firebase');
+const firebase = restFirebase.factory('some-id');
+const ref = firebase({paths: 'some/path', auth: 'firebase-secret...'});
+const newRules = '{"rules": {}}';
+
+
+ref.rules().then(
+  rules => console.log('old rules: %s', rules)
+).then(
+  () => ref.rules(newRules)
+)
 ```

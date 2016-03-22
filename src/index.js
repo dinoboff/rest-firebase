@@ -6,10 +6,13 @@
 
 const request = require('request');
 
-const baseRequest = request.defaults({timeout: 5000, json: true});
+const TIMEOUT = 5000;
+const baseRequest = request.defaults({timeout: TIMEOUT, json: true});
 const VALID_ID = /^[-0-9a-zA-Z]{2,}$/;
 const VALID_URL = /^https?:\/\/[\da-z\.-]+(\:\d+)?\/?$/;
 const ERR_INVALID_ID = 'Invalid Firebase id.';
+const ERR_NO_SECRET = 'A Firebase secret is required for this operation.';
+const ERR_INVALID_SECRET = 'Invalid Firebase secret. Maybe set auth to an oauth token.';
 
 class ResponseError extends Error {
 
@@ -28,6 +31,7 @@ class ResponseError extends Error {
 class Request {
 
   constructor(opts) {
+    this.rootPath = trimPath(opts.rootPath);
     this.url = opts.url;
     this.auth = opts.auth;
     this.$logger = opts.logger || console;
@@ -75,6 +79,44 @@ class Request {
     });
   }
 
+  rules(rules) {
+    if (!this.auth) {
+      return Promise.reject(new Error(ERR_NO_SECRET));
+    }
+
+    if (this.auth.length !== 40) {
+      return Promise.reject(new Error(ERR_INVALID_SECRET));
+    }
+
+    const opts = {
+      'method': 'GET',
+      'url': `${this.rootPath}/.settings/rules.json`,
+      'qs': {auth: this.auth}
+    };
+
+    return new Promise((resolve, reject) => {
+      if (rules) {
+        opts.method = 'PUT';
+        opts.body = rules;
+        opts.json = typeof(rules) === 'object';
+      }
+
+      request(opts, (err, resp, body) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (resp.statusCode >= 300) {
+          reject(new ResponseError(opts, resp, body));
+          return;
+        }
+
+        resolve(body);
+      });
+    });
+  }
+
   get(qs) {
     return this.process(this.url, 'GET', qs);
   }
@@ -106,6 +148,10 @@ class Request {
   remove(qs) {
     return this.process(this.url, 'DELETE', qs);
   }
+}
+
+function trimPath(path) {
+  return path.replace(/\/+$/, '');
 }
 
 /**
@@ -143,10 +189,10 @@ function restFirebaseFactory(target) {
 
   function restFirebase(opts) {
     const relPaths = opts && opts.paths || '';
-    const paths = [rootPath].concat(relPaths);
+    const url = [rootPath].concat(relPaths).join('/');
 
     return new Request(
-      Object.assign({}, opts, {url: paths.join('/')})
+      Object.assign({}, opts, {rootPath, url})
     );
   }
 

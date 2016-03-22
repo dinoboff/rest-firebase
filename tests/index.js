@@ -1,5 +1,6 @@
 'use strict';
 
+const textBody = require("body");
 const jsonBody = require('body/json');
 const expect = require('expect.js');
 const firebase = require('../');
@@ -51,14 +52,11 @@ describe('factory', function() {
     const port = 8000;
     const paths = 'foo/bar';
     const auth = 'some-token';
-    let server, ref;
+    let server, ref, factory, logger;
 
     beforeEach(function() {
-      const factory = firebase.factory(`http://127.0.0.1:${port}`);
-      const logger = {
-        warn: sinon.mock()
-      };
-
+      factory = firebase.factory(`http://127.0.0.1:${port}`);
+      logger = {warn: sinon.mock()};
       ref = factory({paths, auth, logger});
       server = fakeServer.factory({port});
       server.start();
@@ -66,6 +64,109 @@ describe('factory', function() {
 
     afterEach(function() {
       server.stop();
+    });
+
+    describe('rules', function() {
+      const secret = 'somesecretsomesecretsomesecretsomesecret';
+      let ref;
+
+      beforeEach(function() {
+        ref = factory({paths, auth: secret, logger});
+      });
+
+      it('should reject if auth is not set', function() {
+        ref = factory({paths, logger});
+
+        return ref.rules().then(
+          () => Promise.reject(new Error('unexpected')),
+          () => undefined
+        );
+      });
+
+      it('should reject if auth is not set', function() {
+        ref = factory({paths, auth, logger});
+
+        return ref.rules().then(
+          () => Promise.reject(new Error('unexpected')),
+          () => undefined
+        );
+      });
+
+      it('should query the security rules', function() {
+        server.returns.push((req, resp) => {
+          expect(req.method).to.be('GET');
+          expect(req.url).to.be(`/.settings/rules.json?auth=${secret}`);
+
+          resp.writeHead(200, {'Content-Type': 'application/json'});
+          resp.end('{"rules": {}}');
+        });
+
+        return ref.rules().then(
+          () => expect(server.calls).to.have.length(1)
+        );
+      });
+
+      it('should return raw rules (unparsed)', function() {
+        const result = '{"rules": {}}';
+
+        server.returns.push((req, resp) => {
+          resp.writeHead(200, {'Content-Type': 'application/json'});
+          resp.end(result);
+        });
+
+        return ref.rules().then(
+          rules => expect(rules).to.be(result)
+        );
+      });
+
+      it('should send a PUT request', function() {
+        const rules = '{"rules": {}}';
+
+        server.returns.push((req, resp) => {
+          expect(req.method).to.be('PUT');
+          expect(req.url).to.be(`/.settings/rules.json?auth=${secret}`);
+
+          resp.writeHead(204, {'Content-Type': 'application/json'});
+          resp.end();
+        });
+
+        return ref.rules(rules).then(
+          () => expect(server.calls).to.have.length(1)
+        );
+      });
+
+      it('should send rules as payload', function(done) {
+        const rules = '{"rules": {\n}}';
+
+        server.returns.push((req, resp) => {
+          textBody(req, (err, body) => {
+            expect(body).to.eql(rules);
+            done();
+          });
+
+          resp.writeHead(204, {'Content-Type': 'application/json'});
+          resp.end();
+        });
+
+        ref.rules(rules);
+      });
+
+      it('should stringify the rules when given as object', function(done) {
+        const rules = {rules: {}};
+
+        server.returns.push((req, resp) => {
+          jsonBody(req, (err, body) => {
+            expect(body).to.eql(rules);
+            done();
+          });
+
+          resp.writeHead(204, {'Content-Type': 'application/json'});
+          resp.end();
+        });
+
+        ref.rules(rules);
+      });
+
     });
 
     describe('get', function() {
@@ -194,8 +295,13 @@ describe('factory', function() {
 
         server.returns.push((req, resp) => {
           jsonBody(req, (err, body) => {
-            expect(body).to.eql(body);
-            done();
+            try {
+              expect(body).to.eql(payload);
+              done();
+            } catch (e) {
+              done(e);
+            }
+
           });
 
           resp.writeHead(200, {'Content-Type': 'application/json'});
