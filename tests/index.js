@@ -1,6 +1,6 @@
 'use strict';
 
-const textBody = require("body");
+const textBody = require('body');
 const jsonBody = require('body/json');
 const expect = require('expect.js');
 const firebase = require('../');
