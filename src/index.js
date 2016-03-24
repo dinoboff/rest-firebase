@@ -12,7 +12,6 @@ const VALID_ID = /^[-0-9a-zA-Z]{2,}$/;
 const VALID_URL = /^https?:\/\/[\da-z\.-]+(\:\d+)?\/?$/;
 const ERR_INVALID_ID = 'Invalid Firebase id.';
 const ERR_NO_SECRET = 'A Firebase secret is required for this operation.';
-const ERR_INVALID_SECRET = 'Invalid Firebase secret. Maybe set auth to an oauth token.';
 
 class ResponseError extends Error {
 
@@ -82,10 +81,6 @@ class Request {
   rules(rules) {
     if (!this.auth) {
       return Promise.reject(new Error(ERR_NO_SECRET));
-    }
-
-    if (this.auth.length !== 40) {
-      return Promise.reject(new Error(ERR_INVALID_SECRET));
     }
 
     const opts = {
