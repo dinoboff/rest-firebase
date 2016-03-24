@@ -180,7 +180,7 @@ function restFirebaseFactory(target) {
   let rootPath;
 
   if (VALID_URL.test(target)) {
-    rootPath = target;
+    rootPath = trimPath(target);
   } else if (VALID_ID.test(target)) {
     rootPath = `https://${target}.firebaseio.com`;
   } else {
